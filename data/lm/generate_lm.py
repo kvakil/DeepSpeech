@@ -74,9 +74,9 @@ def convert_and_filter_topk(args):
     return data_lower, vocab_str
 
 
-def build_lm(args, data_lower, vocab_str):
+def build_intermediate_lm(args, data_lower):
     print("\nCreating ARPA file ...")
-    lm_path = os.path.join(args.output_dir, "lm.arpa")
+    intermediate_path = os.path.join(args.output_dir, "lm.intermediate")
     subargs = [
             os.path.join(args.kenlm_bins, "lmplz"),
             "--order",
@@ -87,15 +87,18 @@ def build_lm(args, data_lower, vocab_str):
             args.max_arpa_memory,
             "--text",
             data_lower,
-            "--arpa",
-            lm_path,
+            "--intermediate",
+            intermediate_path,
             "--prune",
             *args.arpa_prune.split("|"),
         ]
     if args.discount_fallback:
         subargs += ["--discount_fallback"]
     subprocess.check_call(subargs)
+    return intermediate_path
 
+def build_lm(args, vocab_str):
+    lm_path = os.path.join(args.output_dir, "lm.arpa")
     # Filter LM using vocabulary of top-k words
     print("\nFiltering ARPA file using vocabulary of top-k words ...")
     filtered_path = os.path.join(args.output_dir, "lm_filtered.arpa")
@@ -201,9 +204,9 @@ def main():
     build_lm(args, data_lower, vocab_str)
 
     # Delete intermediate files
-    os.remove(os.path.join(args.output_dir, "lower.txt.gz"))
-    os.remove(os.path.join(args.output_dir, "lm.arpa"))
-    os.remove(os.path.join(args.output_dir, "lm_filtered.arpa"))
+    # os.remove(os.path.join(args.output_dir, "lower.txt.gz"))
+    # os.remove(os.path.join(args.output_dir, "lm.arpa"))
+    # os.remove(os.path.join(args.output_dir, "lm_filtered.arpa"))
 
 
 if __name__ == "__main__":
